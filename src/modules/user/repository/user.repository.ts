@@ -1,6 +1,6 @@
 import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { Repository } from 'typeorm';
+import { Repository } from 'typeorm'; // db에 접근하여 데이터를 조회, 생성, 수정, 삭제하는 객체
 import { User } from '../../../common/db/entities/user.entity';
 import { CreateUserDto } from '../dto/create-user.dto';
 
@@ -12,39 +12,42 @@ export class UserRepository {
   ) {}
 
   async findOne(options): Promise<User | undefined> {
-    // Todo: findOne은 어떤 조건이 들어올지 몰라도 where절에 options를 통해 데이터를 조회해야 합니다.
-    return undefined;
+    const user = await this.userRepository.findOne({ where: options });
+    return user || undefined;
   }
 
   async findAll(): Promise<User[]> {
-    // Todo: findAll은 전체 데이터를 조회해야 합니다.
-    return [];
+    return await this.userRepository.find();
   }
 
   async create(createUserDto: CreateUserDto): Promise<User> {
-    // Todo: create은 유저 데이터를 생성해야 합니다.
-    return {} as User;
+    const user = this.userRepository.create(createUserDto);
+    return await this.userRepository.save(user);
   }
 
   async countAll(): Promise<number> {
-    // Todo: countAll은 전체 데이터의 개수를 조회해야 합니다.
-    return 0;
+    return await this.userRepository.count();
   }
 
   async existsByUserId(userId: string): Promise<boolean> {
-    // Todo: existsByUserId은 userId로 유저의 정보가 있는지 확인해야 합니다. 리턴은 boolean으로 해주세요.
-    return false;
+    const count = await this.userRepository.count({ where: { userId } });
+    return count > 0;
   }
 
   async update(
     userId: string,
     updateUserDto: Partial<CreateUserDto>
   ): Promise<User> {
-    // Todo: update은 userId로 유저의 정보를 수정해야 합니다.
-    return {} as User;
+    const user = await this.userRepository.findOne({ where: { userId } });
+    if (!user) {
+      throw new Error('User not found');
+    }
+    
+    Object.assign(user, updateUserDto);
+    return await this.userRepository.save(user);
   }
 
-  async delete(userId: string): Promise<void> {
-    // Todo: delete은 userId로 유저의 정보를 삭제해야 합니다.
+  async delete(userId: string): Promise<void> {// userId에 해당하는 전체 행(row)을 삭제
+    await this.userRepository.delete({ userId });
   }
 }
